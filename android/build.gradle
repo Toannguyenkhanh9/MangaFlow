@@ -19,3 +19,15 @@ buildscript {
 }
 
 apply plugin: "com.facebook.react.rootproject"
+subprojects {
+    configurations.configureEach {
+        resolutionStrategy {
+            force "com.google.android.gms:play-services-ads:24.6.0"
+            force "com.google.android.gms:play-services-ads-lite:24.6.0"
+
+            force "org.jetbrains.kotlin:kotlin-stdlib:2.1.20"
+            force "org.jetbrains.kotlin:kotlin-stdlib-jdk7:2.1.20"
+            force "org.jetbrains.kotlin:kotlin-stdlib-jdk8:2.1.20"
+        }
+    }
+}

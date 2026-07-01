@@ -1,45 +1,36 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
-
-import { NewAppScreen } from '@react-native/new-app-screen';
-import { StatusBar, StyleSheet, useColorScheme, View } from 'react-native';
+import React, {useEffect} from 'react';
+import {NavigationContainer} from '@react-navigation/native';
+import {SafeAreaProvider} from 'react-native-safe-area-context';
+import RootNavigator from './src/navigation/RootNavigator';
 import {
-  SafeAreaProvider,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
+  AppPreferencesProvider,
+} from './src/context/AppPreferencesContext';
+import {LibraryProvider} from './src/context/LibraryContext';
+import {initAds} from './src/services/ads';
+import {endPurchases, initPurchases} from './src/services/purchases';
 
-function App() {
-  const isDarkMode = useColorScheme() === 'dark';
+export default function App() {
+  useEffect(() => {
+    initAds();
+
+    initPurchases().catch(() => {
+      // IAP có thể chưa sẵn sàng khi chạy simulator/dev.
+    });
+
+    return () => {
+      endPurchases().catch(() => {});
+    };
+  }, []);
 
   return (
     <SafeAreaProvider>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      <AppContent />
+      <AppPreferencesProvider>
+        <LibraryProvider>
+          <NavigationContainer>
+            <RootNavigator />
+          </NavigationContainer>
+        </LibraryProvider>
+      </AppPreferencesProvider>
     </SafeAreaProvider>
   );
 }
-
-function AppContent() {
-  const safeAreaInsets = useSafeAreaInsets();
-
-  return (
-    <View style={styles.container}>
-      <NewAppScreen
-        templateFileName="App.tsx"
-        safeAreaInsets={safeAreaInsets}
-      />
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-});
-
-export default App;
