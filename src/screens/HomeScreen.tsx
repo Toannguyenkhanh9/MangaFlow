@@ -9,7 +9,7 @@ import {getMangaList, getMangaTags, MangaSort, type MangaItem, type MangaTag} fr
 import {useAppPreferences} from '../context/AppPreferencesContext';
 import EmptyState from '../components/EmptyState';
 import {getLocalizedText} from '../utils/manga';
-
+import {translateGenreName} from '../i18n/genreNames';
 type Props = CompositeScreenProps<BottomTabScreenProps<MainTabParamList, 'Home'>, NativeStackScreenProps<RootStackParamList>>;
 
 export default function HomeScreen({navigation}: Props) {
@@ -23,10 +23,19 @@ export default function HomeScreen({navigation}: Props) {
   const [tagsLoading, setTagsLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const selectedTagName = useMemo(() => {
-    const tag = tags.find(item => item.id === selectedTagId);
-    return tag ? getLocalizedText(tag.attributes.name, appLanguage) || getLocalizedText(tag.attributes.name, 'en') : t('common.all');
-  }, [tags, selectedTagId, appLanguage, t]);
+const selectedTagName = useMemo(() => {
+  const tag = tags.find(item => item.id === selectedTagId);
+
+  if (!tag) {
+    return t('common.all');
+  }
+
+  const englishName =
+    getLocalizedText(tag.attributes.name, 'en') ||
+    getLocalizedText(tag.attributes.name, appLanguage);
+
+  return translateGenreName(englishName, appLanguage);
+}, [tags, selectedTagId, appLanguage, t]);
 
   const sectionTitle = useMemo(() => {
     if (keyword.trim()) return t('home.searchResults');
@@ -121,7 +130,11 @@ export default function HomeScreen({navigation}: Props) {
               {tagsLoading && <ActivityIndicator color={colors.primary} style={styles.tagsLoading} />}
               {tags.map(tag => {
                 const active = selectedTagId === tag.id;
-                const name = getLocalizedText(tag.attributes.name, appLanguage) || getLocalizedText(tag.attributes.name, 'en');
+const englishName =
+  getLocalizedText(tag.attributes.name, 'en') ||
+  getLocalizedText(tag.attributes.name, appLanguage);
+
+const name = translateGenreName(englishName, appLanguage);
                 return (
                   <Pressable key={tag.id} style={[styles.genreChip, {backgroundColor: active ? colors.primary : colors.surface, borderColor: active ? colors.primary : colors.border}]} onPress={() => changeTag(tag.id)}>
                     <Text style={[styles.genreChipText, {color: active ? '#ffffff' : colors.text}]}>{name}</Text>

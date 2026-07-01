@@ -29,6 +29,7 @@ import {cleanChapterTitle} from '../utils/manga';
 import {useAppPreferences} from '../context/AppPreferencesContext';
 import {useLibrary} from '../context/LibraryContext';
 import {showInterstitialIfReady} from '../services/ads';
+import {translateGenreName} from '../i18n/genreNames';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'MangaDetail'>;
 
@@ -45,7 +46,9 @@ export default function MangaDetailScreen({route, navigation}: Props) {
   const description = getMangaDescription(manga, language);
   const coverUrl = getMangaCoverUrl(manga, 512);
   const favorite = isFavorite(manga.id);
-  const tags = getMangaTagNames(manga, appLanguage).slice(0, 6);
+const tags = getMangaTagNames(manga, 'en')
+  .map(name => translateGenreName(name, appLanguage))
+  .slice(0, 6);
 
   useLayoutEffect(() => {
     navigation.setOptions({
