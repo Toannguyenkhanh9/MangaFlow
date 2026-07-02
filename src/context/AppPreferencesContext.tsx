@@ -130,7 +130,7 @@ export function AppPreferencesProvider({children}: {children: ReactNode}) {
   const [appLanguageState, setAppLanguageState] =
     useState<AppLanguage>('vi');
   const [contentLanguageState, setContentLanguageState] = useState('en');
-  const [themeModeState, setThemeModeState] = useState<ThemeMode>('dark');
+  const [themeModeState, setThemeModeState] = useState<ThemeMode>('light');
   const [removeAdsState, setRemoveAdsState] = useState(false);
   const [readerSettingsState, setReaderSettingsState] =
     useState<ReaderSettings>(defaultReaderSettings);
