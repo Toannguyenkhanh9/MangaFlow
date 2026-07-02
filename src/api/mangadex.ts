@@ -4,24 +4,13 @@ const API_BASE = 'https://api.mangadex.org';
 
 export type MangaRelationship = {id: string; type: string; attributes?: {fileName?: string; name?: string}};
 export type MangaTag = {id: string; type: 'tag'; attributes: {name: Record<string, string>; description?: Record<string, string>; group?: string; version?: number}};
-export type MangaItem = {
-  id: string;
-  type: 'manga';
-  attributes: {
-    title?: Record<string, string>;
-    altTitles?: Array<Record<string, string>>;
-    description?: Record<string, string>;
-    status?: string;
-    year?: number;
-    contentRating?: string;
-    tags?: MangaTag[];
-  };
-  relationships?: MangaRelationship[];
-};
+export type MangaItem = {id: string; type: 'manga'; attributes: {title?: Record<string, string>; altTitles?: Array<Record<string, string>>; description?: Record<string, string>; status?: string; year?: number; contentRating?: string; tags?: MangaTag[]}; relationships?: MangaRelationship[]};
 export type ChapterItem = {id: string; type: 'chapter'; attributes: {title?: string | null; chapter?: string | null; volume?: string | null; translatedLanguage?: string; pages?: number; publishAt?: string}; relationships?: MangaRelationship[]};
 export type ChapterPagesResponse = {baseUrl: string; chapter: {hash: string; data: string[]; dataSaver: string[]}};
-export type MangaSort = 'latest' | 'popular';
-export type MangaListParams = {language: string; sort: MangaSort; query?: string; tagId?: string | null; limit?: number};
+export type MangaSort = 'latest' | 'popular' | 'title' | 'updated';
+export type MangaStatusFilter = 'all' | 'ongoing' | 'completed' | 'hiatus' | 'cancelled';
+export type ContentRatingFilter = 'safe' | 'suggestive' | 'both';
+export type MangaListParams = {language: string; sort: MangaSort; query?: string; tagId?: string | null; limit?: number; status?: MangaStatusFilter; contentRating?: ContentRatingFilter; year?: string};
 
 function buildUrl(path: string) { return `${API_BASE}${path}`; }
 async function requestJson<T>(url: string): Promise<T> {
@@ -29,9 +18,13 @@ async function requestJson<T>(url: string): Promise<T> {
   if (!res.ok) throw new Error(`MangaDex error ${res.status}: ${await res.text()}`);
   return res.json();
 }
-function appendContentRatings(url: URL) {
-  url.searchParams.append('contentRating[]', 'safe');
-  url.searchParams.append('contentRating[]', 'suggestive');
+function appendContentRatings(url: URL, rating: ContentRatingFilter = 'both') {
+  if (rating === 'both') {
+    url.searchParams.append('contentRating[]', 'safe');
+    url.searchParams.append('contentRating[]', 'suggestive');
+    return;
+  }
+  url.searchParams.append('contentRating[]', rating);
 }
 function appendIncludes(url: URL) {
   url.searchParams.append('includes[]', 'cover_art');
@@ -40,6 +33,8 @@ function appendIncludes(url: URL) {
 }
 function appendOrder(url: URL, sort: MangaSort) {
   if (sort === 'popular') url.searchParams.append('order[followedCount]', 'desc');
+  else if (sort === 'title') url.searchParams.append('order[title]', 'asc');
+  else if (sort === 'updated') url.searchParams.append('order[updatedAt]', 'desc');
   else url.searchParams.append('order[latestUploadedChapter]', 'desc');
 }
 
@@ -57,13 +52,15 @@ export async function getMangaList(params: MangaListParams) {
   url.searchParams.append('limit', String(params.limit || 40));
   url.searchParams.append('availableTranslatedLanguage[]', params.language);
   appendIncludes(url);
-  appendContentRatings(url);
+  appendContentRatings(url, params.contentRating || 'both');
   appendOrder(url, params.sort);
   if (params.query?.trim()) url.searchParams.append('title', params.query.trim());
   if (params.tagId) {
     url.searchParams.append('includedTags[]', params.tagId);
     url.searchParams.append('includedTagsMode', 'AND');
   }
+  if (params.status && params.status !== 'all') url.searchParams.append('status[]', params.status);
+  if (params.year?.trim()) url.searchParams.append('year', params.year.trim());
   const json = await requestJson<{data: MangaItem[]}>(url.toString());
   return json.data;
 }
@@ -107,6 +104,14 @@ export function getMangaTitle(manga: MangaItem, language = 'en') { return getLoc
 export function getMangaDescription(manga: MangaItem, language = 'en') { return getLocalizedText(manga.attributes.description, language); }
 export function getMangaTagNames(manga: MangaItem, language = 'en') {
   return (manga.attributes.tags || []).filter(tag => tag.attributes.group === 'genre').map(tag => getLocalizedText(tag.attributes.name, language) || getLocalizedText(tag.attributes.name, 'en')).filter(Boolean);
+}
+export function getChapterScanlationGroup(chapter: ChapterItem) {
+  const group = chapter.relationships?.find(item => item.type === 'scanlation_group');
+  return group?.attributes?.name || null;
+}
+export function getFirstGenreTagId(manga: MangaItem) {
+  const tag = manga.attributes.tags?.find(item => item.attributes.group === 'genre');
+  return tag?.id || null;
 }
 export function getMangaCoverUrl(manga: MangaItem, size: 256 | 512 = 512) {
   const cover = manga.relationships?.find(item => item.type === 'cover_art');

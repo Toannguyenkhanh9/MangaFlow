@@ -1,9 +1,7 @@
-import {Platform} from 'react-native';
-
-export const REMOVE_ADS_PRODUCT_ID =
-  Platform.OS === 'ios' ? 'com.mangaflow.removeads' : 'remove_ads';
+export const REMOVE_ADS_PRODUCT_ID = 'disabled';
 
 export async function initPurchases() {
+  // Paid services disabled because MangaDex usage policy does not allow paid services.
   return false;
 }
 
@@ -12,7 +10,7 @@ export async function endPurchases() {
 }
 
 export async function buyRemoveAds() {
-  throw new Error('IAP is disabled in this build.');
+  throw new Error('Paid services are disabled for MangaDex-based builds.');
 }
 
 export async function restoreRemoveAds() {

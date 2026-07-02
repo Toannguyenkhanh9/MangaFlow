@@ -79,7 +79,7 @@ android {
 
     namespace "com.mangaflow"
     defaultConfig {
-        applicationId "com.mangaflow"
+        applicationId "com.nexus.mangaflow"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

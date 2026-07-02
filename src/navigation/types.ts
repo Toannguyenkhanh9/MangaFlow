@@ -4,6 +4,7 @@ import type {ChapterItem, MangaItem} from '../api/mangadex';
 export type MainTabParamList = {
   Home: undefined;
   Favorites: undefined;
+  Offline: undefined;
   History: undefined;
   Settings: undefined;
 };
@@ -19,5 +20,8 @@ export type RootStackParamList = {
     chapter: ChapterItem;
     title: string;
     language: string;
+    initialPageIndex?: number;
+    offlinePages?: string[];
+    offlineMode?: boolean;
   };
 };
